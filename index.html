@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>英语语音评测大师 | 智能纠音 + 语调指导 + 字母发音分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fa 0%, #e2eaf3 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .hero h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(115deg, #0b3b5f, #1b7b6e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hero h1::before {
+            content: "🎙️";
+            background: none;
+            color: #1f7a6b;
+        }
+        .sub {
+            color: #2a5f78;
+            margin-top: 0.4rem;
+            font-weight: 500;
+            background: #ffffffcc;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+            font-size: 0.9rem;
+        }
+        .feature-badge {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .badge-pill {
+            background: #e9f0f9;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #1d6380;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.2rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            padding: 1.8rem;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e2f3e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.2rem;
+            border-left: 5px solid #2b9b8a;
+            padding-left: 1rem;
+        }
+
+        .record-zone {
+            text-align: center;
+            margin: 1rem 0 1.2rem;
+        }
+        .mic-btn {
+            background: linear-gradient(145deg, #1f6392, #13487a);
+            border: none;
+            padding: 1rem 2.4rem;
+            border-radius: 60px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .mic-btn.recording {
+            background: linear-gradient(145deg, #bc3f2e, #922c1c);
+            box-shadow: 0 6px 14px rgba(185, 28, 28, 0.3);
+        }
+        .mic-btn:active { transform: scale(0.96); }
+        .status-text {
+            margin-top: 0.7rem;
+            font-size: 0.8rem;
+            background: #eef2fa;
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            color: #235b7a;
+        }
+
+        .recognized-area {
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #d9e5ef;
+        }
+        .recognized-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            line-height: 1.5;
+            color: #0f3a4f;
+            word-break: break-word;
+        }
+
+        .score-panel {
+            background: #eef3fd;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .big-score {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #1d7a6b;
+        }
+
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 1rem 0;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 0.2rem;
+        }
+        .word-tile {
+            background: white;
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #dfecf3;
+            transition: 0.1s;
+        }
+        .word-tile span {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .word-tile.mispronounced {
+            background: #ffeae9;
+            border-left: 4px solid #dc2626;
+            color: #b91c1c;
+        }
+        .word-tile.mispronounced span {
+            color: #b91c1c;
+        }
+        .speak-small {
+            background: #2b9b8a;
+            border: none;
+            color: white;
+            border-radius: 30px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .intonation-box, .letter-feedback {
+            background: #eef3fa;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+        }
+        .grammar-feedback {
+            background: #fef9e6;
+            border-left: 5px solid #f4b942;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .mispronounce-notes {
+            background: #ffe8e6;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
+            color: #a11f1f;
+            font-weight: 500;
+        }
+        hr {
+            margin: 1rem 0;
+            border-color: #d0e2ef;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6e8fae;
+            font-size: 0.7rem;
+        }
+        @media (max-width: 780px) {
+            .grid-2col { grid-template-columns: 1fr; gap: 1.2rem; }
+            body { padding: 1rem; }
+        }
+        button { cursor: pointer; }
+        .loader {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .info-note {
+            font-size: 0.7rem;
+            background: #f1f6fc;
+            border-radius: 1rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>英语语音评测 · 智能纠音大师</h1>
+        <div class="sub">🎤 自由朗读任意英文句子 → 单词标红 · 语调指导 · 字母发音分析</div>
+        <div class="feature-badge">
+            <span class="badge-pill">🔴 错误单词标红并重点点评</span>
+            <span class="badge-pill">📈 语调升降调建议</span>
+            <span class="badge-pill">🔊 字母发音过重/过轻检测</span>
+            <span class="badge-pill">✍️ 语法智能修正</span>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <!-- 左侧：录音+评分+识别 -->
+        <div class="card">
+            <div class="card-title">
+                🎙️ 语音录入 & 综合评分
+            </div>
+            <div class="record-zone">
+                <button id="recordBtn" class="mic-btn">
+                    <span>🎙️</span> 开始朗读评测
+                </button>
+                <div id="statusMsg" class="status-text">⚡ 点击麦克风，允许麦克风后清晰朗读英文</div>
+            </div>
+            <div class="recognized-area">
+                <div style="font-size:0.7rem; font-weight:600;">📝 识别文本</div>
+                <div id="recognizedText" class="recognized-text">— 未开始 —</div>
+            </div>
+            <div class="score-panel">
+                <div style="font-weight:600;">发音综合评分</div>
+                <div class="big-score" id="totalScore">0</div>
+                <div id="scoreComment" style="font-size:0.75rem; color:#3a6f8c;">等待朗读...</div>
+            </div>
+            <div class="info-note">
+                💡 评测基于声学规则模拟：易错音素、语调、字母发音强度等综合分析。
+            </div>
+        </div>
+
+        <!-- 右侧：逐词纠音 + 语调指导 + 发音细节 -->
+        <div class="card">
+            <div class="card-title">
+                🔊 发音深度分析 & 纠音指导
+            </div>
+            <div style="font-weight:600; margin-bottom:6px;">📖 逐词发音 (红色为可能不标准)</div>
+            <div id="wordListPanel" class="word-list">
+                — 朗读后将自动分析每个单词 —
+            </div>
+            <div id="intonationAdvice" class="intonation-box">
+                <strong>🎵 语调指导</strong><br>
+                <span id="intonationText">朗读后自动分析句子语调，给出升降调建议。</span>
+            </div>
+            <div id="letterDetails" class="letter-feedback">
+                <strong>🔤 字母发音细节 (过重/过轻提醒)</strong><br>
+                <span id="letterFeedbackText">根据单词发音特征，提醒爆破音、元音长度等。</span>
+            </div>
+            <div id="mispronouncedHighlight" class="mispronounce-notes" style="display: none;">
+                <strong>⚠️ 重点纠音单词</strong><br>
+                <span id="focusWords"></span>
+            </div>
+            <hr>
+            <div id="grammarArea" class="grammar-feedback">
+                <strong>✍️ 语法分析与补充</strong>
+                <div id="grammarContent" style="margin-top: 8px;">👉 朗读后自动检测语法错误，并提供修正。</div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        🌟 自由模式 | 智能发音分析引擎 (音素库+语调规则) + 语法纠错(LanguageTool)
+    </footer>
+</div>
+
+<script>
+    // ------ 语音识别初始化 ------
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognitionSupported = SpeechRecognition != null;
+    let recognition = null;
+    let isRecording = false;
+    let finalTranscript = '';
+    let interimBuffer = '';
+
+    // DOM 元素
+    const recordBtn = document.getElementById('recordBtn');
+    const statusMsgDiv = document.getElementById('statusMsg');
+    const recognizedTextSpan = document.getElementById('recognizedText');
+    const totalScoreSpan = document.getElementById('totalScore');
+    const scoreCommentSpan = document.getElementById('scoreComment');
+    const wordListPanel = document.getElementById('wordListPanel');
+    const intonationTextSpan = document.getElementById('intonationText');
+    const letterFeedbackSpan = document.getElementById('letterFeedbackText');
+    const mispronouncedHighlightDiv = document.getElementById('mispronouncedHighlight');
+    const focusWordsSpan = document.getElementById('focusWords');
+    const grammarContentDiv = document.getElementById('grammarContent');
+
+    // 辅助函数
+    function stopRecordingUI(reset = true) {
+        isRecording = false;
+        if (recordBtn) {
+            recordBtn.classList.remove('recording');
+            if (reset) recordBtn.innerHTML = '<span>🎙️</span> 开始朗读评测';
+        }
+    }
+
+    function setRecordingUI() {
+        isRecording = true;
+        recordBtn.classList.add('recording');
+        recordBtn.innerHTML = '<span>🔴</span> 录音中 · 请朗读';
+        statusMsgDiv.innerHTML = '🎤 聆听中，朗读完整句子后自动结束...';
+    }
+
+    function initRecognition() {
+        if (!recognitionSupported) {
+            statusMsgDiv.innerHTML = '❌ 浏览器不支持语音识别，请使用 Chrome/Edge/Safari';
+            if(recordBtn) recordBtn.disabled = true;
+            return null;
+        }
+        const recog = new SpeechRecognition();
+        recog.continuous = false;
+        recog.interimResults = true;
+        recog.lang = 'en-US';
+        recog.maxAlternatives = 1;
+
+        recog.onstart = () => {
+            setRecordingUI();
+            finalTranscript = '';
+            interimBuffer = '';
+            recognizedTextSpan.innerHTML = '... 识别中，清晰朗读 ...';
+            wordListPanel.innerHTML = '<span style="color:#8aaec0;">⏳ 识别完成后分析发音...</span>';
+            intonationTextSpan.innerText = '分析中...';
+            letterFeedbackSpan.innerText = '分析中...';
+            mispronouncedHighlightDiv.style.display = 'none';
+            grammarContentDiv.innerHTML = '等待语音识别...';
+            totalScoreSpan.innerText = '--';
+        };
+
+        recog.onerror = (event) => {
+            let errMsg = '';
+            if (event.error === 'not-allowed') errMsg = '麦克风权限被拒绝，请允许后重试。';
+            else if (event.error === 'no-speech') errMsg = '未检测到语音，请确保麦克风正常。';
+            else errMsg = `识别错误: ${event.error}`;
+            statusMsgDiv.innerHTML = `⚠️ ${errMsg}`;
+            stopRecordingUI();
+            recognizedTextSpan.innerHTML = '识别失败，请重试';
+        };
+
+        recog.onend = () => {
+            if (isRecording) {
+                let userText = finalTranscript.trim();
+                if (userText === "" && interimBuffer !== "") userText = interimBuffer.trim();
+                if (userText === "") {
+                    recognizedTextSpan.innerHTML = '❌ 未识别到有效英文句子，请重新尝试。';
+                    statusMsgDiv.innerHTML = '未检测到句子，点击麦克风再试一次。';
+                    stopRecordingUI();
+                    return;
+                }
+                recognizedTextSpan.innerHTML = userText;
+                statusMsgDiv.innerHTML = '✅ 评测完成！分析发音细节、语调及字母发音...';
+                stopRecordingUI();
+                processAdvancedEvaluation(userText);
+            } else {
+                stopRecordingUI();
+            }
+        };
+
+        recog.onresult = (event) => {
+            interimBuffer = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const chunk = event.results[i][0].transcript;
+                if (event.results[i].isFinal) finalTranscript += chunk;
+                else interimBuffer += chunk;
+            }
+            recognizedTextSpan.innerHTML = finalTranscript + (interimBuffer ? ' ( ' + interimBuffer + ' )' : '');
+        };
+        return recog;
+    }
+
+    function startRecording() {
+        if (!recognitionSupported) { alert("浏览器不支持语音识别。"); return; }
+        if (isRecording) { if (recognition) recognition.stop(); return; }
+        if (recognition) try { recognition.abort(); } catch(e) {}
+        recognition = initRecognition();
+        if (!recognition) return;
+        finalTranscript = '';
+        interimBuffer = '';
+        try { recognition.start(); } catch(err) { statusMsgDiv.innerHTML = '启动失败，刷新重试'; stopRecordingUI(); }
+    }
+    recordBtn.addEventListener('click', () => { if (isRecording) recognition?.stop(); else startRecording(); });
+
+    // 易错音素模式
+    const trickyPatterns = [
+        { pattern: /th/i, hint: "咬舌音 /θ/ 或 /ð/ 容易发成 /s/ 或 /z/，注意舌尖轻触上齿。" },
+        { pattern: /r$/i, hint: "词尾 /r/ 发音过轻或吞音，卷舌要清晰。" },
+        { pattern: /^r/i, hint: "单词开头 /r/ 可能发成 /w/，请卷舌。" },
+        { pattern: /ed$/i, hint: "过去式 -ed 可能混淆 (/t/, /d/, /ɪd/)，注意清浊辅音。" },
+        { pattern: /s$/i, hint: "复数或三单 -s 发音过轻或过重，注意清浊。" },
+        { pattern: /v/i, hint: "/v/ 容易发成 /w/，上齿咬下唇。" },
+        { pattern: /w/i, hint: "/w/ 与 /v/ 混淆，注意唇形。" },
+        { pattern: /ŋ/i, hint: "ing 末尾鼻音容易发成 /n/ 或 /ŋg/，注意后鼻音。" },
+        { pattern: /ʒ/i, hint: "如 'measure' 中的 /ʒ/ 容易发成 /dʒ/ 或 /ʃ/。" }
+    ];
+
+    function detectMispronouncedWord(word) {
+        let reasons = [];
+        for (let tp of trickyPatterns) {
+            if (tp.pattern.test(word.toLowerCase())) {
+                reasons.push(tp.hint);
+            }
+        }
+        if (word.length > 7 && /[aeiou]{2,}/i.test(word)) reasons.push("多音节元音可能不够饱满，注意元音时长。");
+        if (/[ptk]/i.test(word) && word.length <= 3) reasons.push("爆破音可能过重，放松发音。");
+        return { isMistake: reasons.length > 0, reasons: reasons.slice(0,2) };
+    }
+
+    function analyzeIntonation(sentence) {
+        if (!sentence) return "无法分析语调。";
+        const lower = sentence.toLowerCase().trim();
+        let advice = "";
+        if (sentence.endsWith('?')) {
+            if (lower.startsWith('what') || lower.startsWith('where') || lower.startsWith('when') || lower.startsWith('why') || lower.startsWith('how')) 
+                advice = "❓ 疑问词开头的特殊疑问句，语调一般末尾下降。但为了互动，可稍降调。";
+            else advice = "❓ 一般疑问句，句尾通常升调。请尝试结尾音高上扬，表达疑问语气。";
+        } else if (sentence.endsWith('!')) {
+            advice = "❗ 感叹句需要强烈情感，整体音调较高，末尾重读并下降，表达兴奋或命令。";
+        } else {
+            if (sentence.split(/\s+/).length > 8) advice = "📘 长陈述句建议在中间适当停顿（逗号处），句尾平稳下降。避免单一语调。";
+            else advice = "📗 短陈述句保持自然降调，表达肯定。避免句尾上扬（变成疑问）。";
+            if (/\b(but|however|although)\b/i.test(sentence)) advice += " 包含转折词时，转折前语调稍高，转折后降低，突出对比。";
+        }
+        if (sentence.length < 15) advice += " 短句子注意单词重音，实词重读，虚词弱读。";
+        return advice;
+    }
+
+    function analyzeLetterProsody(sentence, words) {
+        if (!sentence || words.length === 0) return "朗读后提供字母发音分析。";
+        let tips = [];
+        const allText = sentence.toLowerCase();
+        const plosives = (allText.match(/[ptk]/g) || []).length;
+        if (plosives > words.length * 0.8) tips.push("⚠️ 爆破音(p,t,k)出现频率较高，可能发音过重，建议轻柔释放气流。");
+        const longVowelPatterns = /(ee|ea|oo|ai|ou|ie|ue|oo)/i;
+        const hasLongVowel = longVowelPatterns.test(allText);
+        if (!hasLongVowel && words.length > 2) tips.push("🔍 注意长元音 /i:/, /ɑ:/, /u:/ 等需要足够时长，使发音饱满。");
+        else if(hasLongVowel) tips.push("✅ 检测到长元音单词，发音时请延长元音，避免过短。");
+        const endsWithLight = words.some(w => /[ptk]$/i.test(w) && w.length > 1);
+        if (endsWithLight) tips.push("🗣️ 注意词尾清辅音（如t,k,p）不要过轻或省略，应该清晰弹出但不过重。");
+        if (allText.match(/s{2,}/) || allText.match(/sh/)) tips.push("📢 's' 或 'sh' 摩擦音若过重会有嘶声，保持气流均匀即可。");
+        if (tips.length === 0) tips.push("字母发音整体较均衡，注意重音落在合适音节上。");
+        return tips.slice(0,3).join("； ");
+    }
+
+    function buildWordPanelWithErrorMarkup(words, misMap) {
+        if (!words.length) return "<span>无有效单词</span>";
+        let html = '';
+        for (let w of words) {
+            const isBad = misMap[w] && misMap[w].isMistake;
+            const cls = isBad ? 'word-tile mispronounced' : 'word-tile';
+            html += `
+                <div class="${cls}">
+                    <span>${escapeHtml(w)}</span>
+                    <button class="speak-small" data-word="${escapeHtml(w)}">🔊 发音</button>
+                </div>
+            `;
+        }
+        wordListPanel.innerHTML = html;
+        document.querySelectorAll('.speak-small').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const word = btn.getAttribute('data-word');
+                if (word && speechSynthesis) {
+                    const utter = new SpeechSynthesisUtterance(word);
+                    utter.lang = 'en-US';
+                    utter.rate = 0.85;
+                    speechSynthesis.cancel();
+                    speechSynthesis.speak(utter);
+                }
+            });
+        });
+    }
+
+    async function fetchGrammar(text) {
+        if (!text || text.trim().length < 3) return { issues: 0, content: "文本过短，无法详细分析语法。" };
+        const url = 'https://languagetool.org/api/v2/check';
+        const params = new URLSearchParams();
+        params.append('text', text);
+        params.append('language', 'en-US');
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 7000);
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params, signal: controller.signal });
+            clearTimeout(timeout);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            const matches = data.matches || [];
+            if (matches.length === 0) return { issues: 0, content: "✨ 语法看起来很棒！没有发现明显错误。" };
+            let html = `<ul style="margin-top:6px; list-style:none;">`;
+            matches.slice(0,4).forEach(m => {
+                const orig = m.context?.text.substring(m.offset, m.offset+m.length) || m.message;
+                const repl = m.replacements?.[0]?.value || "调整用词";
+                html += `<li style="background:#fff0d4; margin-bottom:8px; border-radius:12px; padding:6px;"><strong>⚠️ ${escapeHtml(orig)}</strong> → 建议：${escapeHtml(repl)}<br><span style="font-size:0.7rem;">${escapeHtml(m.message?.slice(0,100))}</span></li>`;
+            });
+            html += `</ul>`;
+            return { issues: matches.length, content: html };
+        } catch(e) {
+            return { issues: 0, content: "语法服务暂不可用，但发音分析仍可参考。" };
+        }
+    }
+
+    function computeOverallScore(wordCount, misCount, grammarIssues, intonationQuality, letterQuality) {
+        let pronPart = Math.max(0, 100 - (misCount / Math.max(1, wordCount)) * 45);
+        let intonationBonus = (intonationQuality > 70) ? 8 : (intonationQuality > 40 ? 5 : 2);
+        let letterBonus = (letterQuality > 70) ? 6 : (letterQuality > 40 ? 3 : 1);
+        let grammarPenalty = Math.min(20, grammarIssues * 5);
+        let final = pronPart + intonationBonus + letterBonus - grammarPenalty;
+        final = Math.min(100, Math.max(0, Math.round(final)));
+        return final;
+    }
+
+    async function processAdvancedEvaluation(userSentence) {
+        const words = userSentence.trim().split(/\s+/).filter(w => w.length > 0);
+        if (words.length === 0) {
+            wordListPanel.innerHTML = "<span>无有效单词</span>";
+            return;
+        }
+        const mispronounceMap = {};
+        let misCount = 0;
+        for (let w of words) {
+            const res = detectMispronouncedWord(w);
+            mispronounceMap[w] = res;
+            if (res.isMistake) misCount++;
+        }
+        buildWordPanelWithErrorMarkup(words, mispronounceMap);
+        
+        const intonationAdv = analyzeIntonation(userSentence);
+        intonationTextSpan.innerText = intonationAdv;
+        let intonationQuality = 60;
+        if (userSentence.endsWith('?')) intonationQuality = 70; else if(userSentence.endsWith('!')) intonationQuality = 75; else intonationQuality = 65;
+        
+        const letterAdv = analyzeLetterProsody(userSentence, words);
+        letterFeedbackSpan.innerText = letterAdv;
+        let letterQuality = 70;
+        if (letterAdv.includes("过重")) letterQuality -= 15;
+        if (letterAdv.includes("过轻")) letterQuality -= 10;
+        letterQuality = Math.min(100, Math.max(30, letterQuality));
+        
+        const badWordsList = words.filter(w => mispronounceMap[w]?.isMistake);
+        if (badWordsList.length > 0) {
+            mispronouncedHighlightDiv.style.display = 'block';
+            focusWordsSpan.innerHTML = badWordsList.map(w => `“${w}” (${mispronounceMap[w].reasons.slice(0,1).join(', ')})`).join('； ');
+        } else {
+            mispronouncedHighlightDiv.style.display = 'none';
+        }
+        
+        grammarContentDiv.innerHTML = '<div class="loader" style="margin-right:6px;"></div> 检测语法中...';
+        const grammar = await fetchGrammar(userSentence);
+        grammarContentDiv.innerHTML = grammar.content;
+        
+        const totalScore = computeOverallScore(words.length, misCount, grammar.issues, intonationQuality, letterQuality);
+        totalScoreSpan.innerText = totalScore;
+        let comment = "";
+        if (totalScore >= 85) comment = "🎉 发音流畅优秀！语调自然，字母发音饱满！";
+        else if (totalScore >= 70) comment = "👍 发音不错，但部分单词有提升空间，重点关注红色词。";
+        else if (totalScore >= 55) comment = "📚 发音需要加强，请跟随红色单词的发音示范练习语调与字母。";
+        else comment = "💪 建议放慢速度，对照红色单词反复练习，注意重音及辅音清晰度。";
+        scoreCommentSpan.innerHTML = `${comment} (易错词:${misCount}/${words.length})`;
+        
+        if (!document.getElementById('fullSpeakBtn')) {
+            const container = document.querySelector('.recognized-area');
+            const btnDiv = document.createElement('div');
+            btnDiv.style.marginTop = '8px';
+            btnDiv.innerHTML = `<button id="fullSpeakBtn" style="background:#eef2fa; border:none; padding:4px 12px; border-radius:30px; font-size:0.7rem;">🔊 朗读完整句子（标准示范）</button>`;
+            container?.appendChild(btnDiv);
+            document.getElementById('fullSpeakBtn')?.addEventListener('click', () => {
+                const utter = new SpeechSynthesisUtterance(userSentence);
+                utter.lang = 'en-US';
+                utter.rate = 0.85;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utter);
+            });
+        }
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m) { if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    if (!recognitionSupported) {
+        statusMsgDiv.innerHTML = '⚠️ 当前浏览器不支持语音评测，请更换 Chrome / Edge。';
+        if(recordBtn) recordBtn.disabled = true;
+    } else {
+        recognition = initRecognition();
+    }
+</script>
+</body>
+</html>
